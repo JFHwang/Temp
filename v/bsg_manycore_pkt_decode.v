@@ -16,12 +16,16 @@ module bsg_manycore_pkt_decode #(
     ,output logic pkt_remote_store_o
     ,output logic [data_width_p-1:0] data_o
     ,output logic [addr_width_p-1:0] addr_o
+    ,output logic [y_cord_width_p-1:0] from_y_cord_o
+    ,output logic [x_cord_width_p-1:0] from_x_cord_o
     );
 
    typedef struct packed {
       logic [5:0] op;
       logic [addr_width_p-1:0] addr;
       logic [data_width_p-1:0] data;
+      logic [y_cord_width_p-1:0] from_y_cord;
+      logic [x_cord_width_p-1:0] from_x_cord;
       logic [y_cord_width_p-1:0] y_cord;
       logic [x_cord_width_p-1:0] x_cord;
    } bsg_manycore_packet_s;
@@ -31,6 +35,8 @@ module bsg_manycore_pkt_decode #(
    assign pkt = data_i;
    assign data_o = pkt.data;
    assign addr_o = pkt.addr;
+   assign from_y_cord_o = pkt.from_y_cord
+   assign from_x_cord_o = pkt.from_x_cord
 
    always_comb
      begin
@@ -41,15 +47,17 @@ module bsg_manycore_pkt_decode #(
 
         if (v_i)
           unique case (pkt.op)
-            6'd2: if (~|pkt.addr[addr_width_p-1:1])
+            6'd2: if (~|pkt.addr[addr_width_p-1:0])
               begin
-                 pkt_freeze_o   = pkt.addr[0];
-                 pkt_unfreeze_o = ~pkt.addr[0];
+                 pkt_freeze_o   = pkt.data[0];
+                 pkt_unfreeze_o = ~pkt.data[0];
               end
-            6'd1: pkt_remote_store_o = 1'b1;
+            6'd1:
+		pkt_remote_store_o = 1'b1;
             default:
               pkt_unknown_o = 1'b1;
           endcase // unique case (fifo_out_data[0].op)
      end
 
 endmodule
+ 
